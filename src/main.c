@@ -4,18 +4,26 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include "inc/sh.h"
+#include "inc/parser.h"
 
-#define MAX_CHAR_INPUT 500
 
 int main () {
     
+    cshell_init();
+
     char input[MAX_CHAR_INPUT];
     char **params = NULL;
+    char *prompt;
     int cpid;
     
     while (1) {
-        fprintf(stdout, "prompt - ");
+        prompt = getenv("PS1");
+        fprintf(stdout, prompt);
         fscanf(stdin, "%s", input);
+
+        if (feof(stdin))    break;
+        
         pid_t pid = fork();
         
         if (pid < 0) {
