@@ -1,0 +1,28 @@
+
+input            : io-redirect
+                 | complete-command
+                 | complete-command '&'
+                 | complete-command command-sep complete-command
+
+complete-command : command
+                 | command io-redirect
+
+command          : COMMAND
+                 | COMMAND command-opts
+                 | command PIPE command
+
+command-opts     : OPT
+                 | command-opts
+
+command-sep      : ';'
+                 | '&&'
+                 | '||'
+
+io-redirect      : io-file
+                 | IO_NUMBER io-file
+
+io-file          : '<'  FILE_NAME
+                 | '>'  FILE_NAME
+                 | '>>' FILE_NAME
+                 | '<>' FILE_NAME
+
