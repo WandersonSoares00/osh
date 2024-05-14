@@ -1,18 +1,18 @@
 
 input            : io-redirect
-                 | complete-command
-                 | complete-command '&'
-                 | complete-command command-sep complete-command
+                 | command-io-list
+                 | command-io-list '&'
 
-complete-command : command
+command-io-list  : command
                  | command io-redirect
+                 | command-io-list command-sep command-io-list
 
 command          : COMMAND
                  | COMMAND command-opts
                  | command PIPE command
 
 command-opts     : OPT
-                 | command-opts
+                 | OPT command-opts
 
 command-sep      : ';'
                  | '&&'
