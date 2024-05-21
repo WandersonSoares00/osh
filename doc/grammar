@@ -1,15 +1,15 @@
 
-input            : io-redirect
-                 | command-io-list
+input            : command-io-list
                  | command-io-list '&'
 
-command-io-list  : command
-                 | command io-redirect
-                 | command-io-list command-sep command-io-list
+command-list     : command-io
+                 | io-redirect
+                 | command-list command-sep command-list
 
-command          : COMMAND
+command-io       : COMMAND
                  | COMMAND command-opts
-                 | command PIPE command
+                 | command-io io-redirect
+                 | command-io '|' command-io
 
 command-opts     : OPT
                  | OPT command-opts
@@ -20,6 +20,7 @@ command-sep      : ';'
 
 io-redirect      : io-file
                  | IO_NUMBER io-file
+                 | io-redirect io-redirect
 
 io-file          : '<'  FILE_NAME
                  | '>'  FILE_NAME
