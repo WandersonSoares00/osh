@@ -1,8 +1,14 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "inc/stack.h"
+
+/**
+ *  This file implements a generic stack
+ *
+ */
 
 Stack *stack_init (int size, void (*dealloc_member)(void*)) {
     Stack *s = malloc(sizeof(Stack));
@@ -59,9 +65,10 @@ void *stack_get_cached_element(Stack *s) {
 }
 
 void *stack_pop(Stack *s) {
-    if (!stack_is_empty(s)){
-        --s->top;
+    if (stack_is_empty(s)){
+        return NULL;
     }
+    --s->top;
     return s->data[s->top+1];
 }
 
