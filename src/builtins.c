@@ -3,24 +3,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void cshell_cd (char *path) {
-    if (!path) {
-        path = getenv("HOME");
+int cshell_cd (char **path) {
+    if (!path[1]) {
+        path[1] = getenv("HOME");
+        path[2] = NULL;
     }
-    
-    chdir(path);
 
-    if (errno)
+    chdir(path[1]);
+
+    if (errno) {
         perror("shell: cd");
+        errno = 0;
+    }
+
+    return 0;
 }
 
-void cshell_exit() {
-    exit(EXIT_SUCCESS);
+int cshell_exit(char **argv) {
+    if (!argv[1]) {
+        exit(EXIT_SUCCESS);
+    }
+    exit(EXIT_FAILURE);
 }
 
-void cshell_exec(char *path, char *const *argv) {
-    execve(path, argv, NULL);
-    if (errno)
-        perror("shell: exec");
-}
+char *builtin_str[] = {
+  "cd",
+  "exit",
+  NULL
+};
+
+int (*builtin_func[]) (char **) = {
+  &cshell_cd,
+  &cshell_exit,
+  NULL
+};
+
 
