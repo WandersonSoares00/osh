@@ -39,18 +39,7 @@ typedef struct {
     Stack *tokens;
 } Parsed_input;
 
-
-void *new_node (Stack *s, size_t element_size);
-
 void parser_init(Parsed_input *p_input);
-
-int parse_io_redirect(Stack *ast, Stack *tokens);
-
-void parse_command_opts(Stack *tokens, Ast_node *node_opts);
-
-int parse_command(Stack *ast, Stack *tokens);
-
-int parse_command_list (Stack *ast, Stack *tokens);
 
 int process_input(char *raw_input, Parsed_input *p_input);
 
