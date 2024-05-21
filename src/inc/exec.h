@@ -1,9 +1,17 @@
-#ifndef EXEC_HPP
-#define EXEC_HPP
+#ifndef EXEC_H
+#define EXEC_H
 
 #include "stack.h"
 #include "parser.h"
+#include "builtins.h"
 
-void exec(Parsed_input *p_input);
+struct Redirects {
+    char *filename;
+    int fd;
+};
+
+void exec(Stack *ast);
+
+void exec_commands(Parsed_input *p_input);
 
 #endif
