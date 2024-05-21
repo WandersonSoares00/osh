@@ -14,34 +14,26 @@ int main () {
     cshell_init();
 
     char input[MAX_CHAR_INPUT];
-    char *prompt;
-    int cpid;
 
     Parsed_input p_input;
     parser_init(&p_input);
     
     while (1) {
-        prompt = getenv("PS1");
-        fprintf(stdout, prompt);
+        fputs(getenv("PS1"), stdout);
+        fflush(stdout);
         fgets(input, MAX_CHAR_INPUT, stdin);
 
         if (feof(stdin))    break;
 
-        process_input(input, &p_input);
+        if (process_input(input, &p_input) > 0) {
+            continue;
+        }
 
-        pid_t pid = fork();
+        exec_commands(&p_input);
         
-        if (pid < 0) {
-            fprintf(stderr, "shell: internal error\n");
-            exit(EXIT_FAILURE);
+        if (errno) {
+            perror("shell");
         }
-        else if (pid != 0) {
-            cpid = waitpid(pid, NULL, 0);
-        }
-        else {
-            exec(&p_input);
-            if (errno)  perror("shell");
-       }
     }
 
     parser_free(&p_input);
