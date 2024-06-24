@@ -136,14 +136,19 @@ int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2) {
     int p[2];
     pid_t pid;
 
-    if (pipe(p) < 0)
+    if (pipe(p) < 0) {
+        perror("pipe");
         return 1;
-
+    }
+    
     if ((pid = fork()) > 0) { // writing process
         close(p[0]);         // close read end
         dup2(p[1], STDOUT_FILENO); // stdout for write end of the pipe
         close(p[1]);
-        return exec(cmd1, redirects);
+        int ret = exec(cmd1, redirects);
+        close(STDOUT_FILENO);
+        wait(NULL);
+        return ret;
     }
     else {           // reading process
         close(p[1]); // close write end
@@ -211,6 +216,19 @@ void exec_commands(Parsed_input *p_input) {
             dup2(tmpout, STDOUT_FILENO);
             close(tmpin);
             close(tmpout);
+            
+            //int pid;
+            //while((pid = wait(NULL)) > 0)   printf("%d -- ", pid);
+            //printf("\n");
+
+            while(!stack_is_empty(ast)) {
+                Ast_node *tmp = stack_top(ast);
+                if (tmp->content_type == t_pipe) {
+                    stack_pop(ast); // pipe
+                    stack_pop(ast); // command
+                    if (is_io_redirect(stack_top(ast))) stack_pop(ast);
+                } else  break;
+            }
         }
         
         node = stack_pop(ast);
