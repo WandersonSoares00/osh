@@ -19,8 +19,8 @@ int main () {
     parser_init(&p_input);
     
     while (1) {
-        fputs(getenv("PS1"), stdout);
         fflush(stdout);
+        fputs(getenv("PS1"), stdout);
         fgets(input, MAX_CHAR_INPUT, stdin);
 
         if (feof(stdin))    break;

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include "inc/stack.h"
@@ -9,17 +10,17 @@
 #include "inc/builtins.h"
 #include "inc/darray.h"
 
-void get_path(char *cmd, char *path) {
+int get_path(char *cmd, char *path) {
     char delimiter[] = ":";
     char *p = strtok(getenv("PATH"), delimiter);
 
     if (*cmd == '.' && *cmd+1 == '/'){
         strcat(path, cmd+2);
-        return;
+        return 1;
     }
 
     if (access(cmd, F_OK) != -1) // complete path
-        return;
+        return 1;
 
     while (p) {
         strcat(path, p);
@@ -27,10 +28,11 @@ void get_path(char *cmd, char *path) {
         strcat(path, cmd);
 
         if (access(path, F_OK) != -1)
-            break;
+            return 1;
         p = strtok(NULL, delimiter);
         *path = '\0';
     }
+    return 0;
 }
 
 int exec_builtin (Ast_node *node, Darray **redirects) {
@@ -87,12 +89,12 @@ void exec_cmd(Ast_node *node, Darray **redirects) {
         }
     }
     char path[50] = "";
-    get_path(node->cmd, path);
-    execv(path, node->opts);
+    if (get_path(node->cmd, path))
+        execv(path, node->opts);
 }
 
-int exec(Ast_node *node, Darray **redirects) {
-    if (exec_builtin(node, redirects)) {
+int exec(Ast_node *cmd, Darray **redirects, int is_background) {
+    if (exec_builtin(cmd, redirects)) {
         return 0;
     }
 
@@ -103,10 +105,12 @@ int exec(Ast_node *node, Darray **redirects) {
     }
     
     if (pid > 0) {
-        return waitpid(pid, NULL, 0) == -1;
+        if (!is_background)
+            return waitpid(pid, NULL, 0) == -1;
+        return 0;
     }
     else {
-        exec_cmd(node, redirects);
+        exec_cmd(cmd, redirects);
         perror("shell");
         exit(1);
     }
@@ -132,7 +136,7 @@ void get_redirects (Stack *ast, Darray **redirects) {
     }
 }
 
-int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2) {
+int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2, int is_background) {
     int p[2];
     pid_t pid;
 
@@ -145,7 +149,8 @@ int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2) {
         close(p[0]);         // close read end
         dup2(p[1], STDOUT_FILENO); // stdout for write end of the pipe
         close(p[1]);
-        int ret = exec(cmd1, redirects);
+        int ret = exec(cmd1, redirects, is_background);
+        fflush(NULL);
         close(STDOUT_FILENO);
         wait(NULL);
         return ret;
@@ -159,7 +164,13 @@ int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2) {
             stack_pop(ast);
             node = stack_pop(ast);
             get_redirects(ast, redirects);
-            exec_pipe(ast, redirects, cmd2, node);
+            Ast_node *tmp = stack_top(ast);
+            if (tmp && tmp->content_type == t_ampersand) {
+                stack_pop(ast);
+                exec_pipe(ast, redirects, cmd2, node, 1);
+            }
+            else
+                exec_pipe(ast, redirects, cmd2, node, is_background);
             exit(0);
         }
         
@@ -193,7 +204,7 @@ void exec_commands(Parsed_input *p_input) {
         cmd_left = node;
         node = stack_top(ast);
         if (!node) {
-            exec(cmd_left, NULL);
+            exec(cmd_left, NULL, 0);
             break;
         }
         
@@ -202,7 +213,7 @@ void exec_commands(Parsed_input *p_input) {
         node = stack_top(ast);
 
         if (!node) {
-            exec(cmd_left, &redirects);
+            exec(cmd_left, &redirects, 0);
             break;
         }
         
@@ -211,30 +222,34 @@ void exec_commands(Parsed_input *p_input) {
             cmd_right = stack_pop(ast);
             int tmpin  = dup(STDIN_FILENO);
             int tmpout = dup(STDOUT_FILENO);
-            ret = exec_pipe(ast, &redirects, cmd_left, cmd_right);
+            ret = exec_pipe(ast, &redirects, cmd_left, cmd_right, 0);
             dup2(tmpin, STDIN_FILENO);
             dup2(tmpout, STDOUT_FILENO);
             close(tmpin);
             close(tmpout);
             
-            //int pid;
-            //while((pid = wait(NULL)) > 0)   printf("%d -- ", pid);
-            //printf("\n");
-
+            Ast_node *tmp;
             while(!stack_is_empty(ast)) {
-                Ast_node *tmp = stack_top(ast);
+                tmp = stack_top(ast);
                 if (tmp->content_type == t_pipe) {
                     stack_pop(ast); // pipe
                     stack_pop(ast); // command
                     if (is_io_redirect(stack_top(ast))) stack_pop(ast);
                 } else  break;
             }
+
+            if (tmp->content_type == t_ampersand)
+                stack_pop(ast);
         }
         
         node = stack_pop(ast);
 
-        if (ret == 2)
-            ret = exec(cmd_left, &redirects);
+        if (ret == 2) {
+            if (!node)
+                ret = exec(cmd_left, &redirects, 0);
+            else if (node->content_type == t_ampersand)
+                ret = exec(cmd_left, &redirects, 1);
+        }
 
         if (!node)  break;
 

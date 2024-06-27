@@ -128,8 +128,9 @@ int parse_ampersand(Stack *ast, Stack *tokens) {
 
     Token *token = stack_top(tokens);
     if (token->content_type == t_ampersand) {
+        stack_pop(tokens);
         Ast_node *ast_node = new_node(ast, sizeof(Ast_node));
-        ast_node->content_type = token->content_type;
+        ast_node->content_type = t_ampersand;
         stack_push(ast, ast_node);
         return 1;
     }
@@ -263,6 +264,9 @@ int process_input(char *raw_input, Parsed_input *p_input) {
         fputs("shell: syntax error: unexpected token\n", stderr);
         return 1;
     }
+    
+    if (stack_is_empty(p_input->tokens))
+        return 0;
 
     if (!parse(p_input)) {
         fputs("shell: syntax error\n", stderr);
