@@ -101,10 +101,13 @@ void forward_to_slave_pty(int master_fd) {
 }
 
 void cshell_init() {
-    int master_fd, slave_fd;
-    char slave_name[2*L_ctermid];
     setenv("PS1", "$ ", 1);
     
+    #ifndef HAVE_READLINE
+
+    int master_fd, slave_fd;
+    char slave_name[2*L_ctermid];
+   
     master_fd = pty_master_open(slave_name);
     if (master_fd == -1){
         perror("init shell");
@@ -124,6 +127,7 @@ void cshell_init() {
         exit(0);
     }
 
+    #endif
 }
 
 

@@ -104,7 +104,10 @@ int exec(Ast_node *cmd, Darray **redirects, int is_background) {
         return 1;
     }
 
+    #ifndef HAVE_READLINE
     setpgid(pid, pid);
+    #endif
+
     if (pid > 0) {
         if (!is_background)
             return waitpid(pid, NULL, 0) == -1;
@@ -157,8 +160,10 @@ int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2, i
         return ret;
     }
     else {
+        #ifndef HAVE_READLINE
         if (getsid(getpid()) == getpgrp())
                 setpgid(pid, pid);
+        #endif
                       // reading process
         close(p[1]); // close write end
         dup2(p[0], STDIN_FILENO); // stdin for read end of the pipe
