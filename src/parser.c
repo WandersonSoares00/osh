@@ -261,7 +261,7 @@ int tokenize(char *raw_input, Stack *tokens) {
 int process_input(char *raw_input, Parsed_input *p_input) {
     raw_input[strcspn(raw_input, "\n")] = '\0'; // remove new line
     if (tokenize(raw_input, p_input->tokens) == 1) {
-        fputs("shell: syntax error: unexpected token\n", stderr);
+        fputs("osh: syntax error: unexpected token\n", stderr);
         return 1;
     }
     
@@ -269,7 +269,7 @@ int process_input(char *raw_input, Parsed_input *p_input) {
         return 0;
 
     if (!parse(p_input)) {
-        fputs("shell: syntax error\n", stderr);
+        fputs("osh: syntax error\n", stderr);
         return 1;
     }
     

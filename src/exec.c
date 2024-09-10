@@ -81,7 +81,7 @@ void exec_cmd(Ast_node *node, Darray **redirects) {
         while (file) {
             if (open_file(file, &fd) == 0) {
                 if(dup2(fd, file->io_number) == -1)
-                    perror("shell");
+                    perror("osh");
                 close(fd);
             }
             darray_pop_front(*redirects);
@@ -115,7 +115,7 @@ int exec(Ast_node *cmd, Darray **redirects, int is_background) {
     }
     else {
         exec_cmd(cmd, redirects);
-        perror("shell");
+        perror("osh");
         exit(1);
     }
 
@@ -185,7 +185,7 @@ int exec_pipe (Stack *ast, Darray **redirects, Ast_node *cmd1, Ast_node *cmd2, i
         
         get_redirects(ast, redirects);
         exec_cmd(cmd2, redirects);
-        perror("shell");
+        perror("osh");
         exit(1);
     }
 }

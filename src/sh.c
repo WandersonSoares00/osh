@@ -65,7 +65,7 @@ int pty_fork(int master_fd, char *slave_name) {
 }
 
 // Aqui deve ficar a logica de controle 
-// dos estados do shell como o uso das setas
+// dos estados do osh como o uso das setas
 // e historico de comados
 void forward_to_slave_pty(int master_fd) {
     fd_set in_fd;
@@ -100,7 +100,7 @@ void forward_to_slave_pty(int master_fd) {
     }
 }
 
-void cshell_init() {
+void osh_init() {
     setenv("PS1", "$ ", 1);
     
     #ifndef HAVE_READLINE
@@ -110,7 +110,7 @@ void cshell_init() {
    
     master_fd = pty_master_open(slave_name);
     if (master_fd == -1){
-        perror("init shell");
+        perror("init osh");
         exit(1);
     } 
 

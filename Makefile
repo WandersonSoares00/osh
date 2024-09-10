@@ -13,17 +13,17 @@ ifeq ($(CHECK_READLINE), yes)
     LDFLAGS += -lreadline
 endif
 
-all: $(OBJ) cshell
+all: $(OBJ) osh
 
-cshell: $(SRCS)
-	$(CC) $(CFLAGS) -o $(OBJ)/cshell $(SRCS) $(LDFLAGS)
+osh: $(SRCS)
+	$(CC) $(CFLAGS) -o $(OBJ)/osh $(SRCS) $(LDFLAGS)
 
-run: cshell
-	./$(OBJ)/cshell
+run: osh
+	./$(OBJ)/osh
 
 $(OBJ):
 	mkdir -v $(OBJ)
 
 clean:
-	rm -rf $(OBJ)/cshell
+	rm -rf $(OBJ)/osh
 

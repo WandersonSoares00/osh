@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int cshell_cd (char **path) {
+int osh_cd (char **path) {
     if (!path[1]) {
         path[1] = getenv("HOME");
         path[2] = NULL;
@@ -12,21 +12,21 @@ int cshell_cd (char **path) {
     chdir(path[1]);
 
     if (errno) {
-        perror("shell: cd");
+        perror("osh: cd");
         errno = 0;
     }
 
     return 0;
 }
 
-int cshell_exit(char **argv) {
+int osh_exit(char **argv) {
     if (!argv[1]) {
         exit(EXIT_SUCCESS);
     }
     exit(EXIT_FAILURE);
 }
 
-int set_env(char **argv) {
+int osh_set_env(char **argv) {
     if (!argv[1] || !argv[2]) {
         fprintf(stderr, "setenv: usage: setenv [name] [value]\n");
         return 1;
@@ -44,9 +44,9 @@ char *builtin_str[] = {
 };
 
 int (*builtin_func[]) (char **) = {
-  &cshell_cd,
-  &cshell_exit,
-  &set_env,
+  &osh_cd,
+  &osh_exit,
+  &osh_set_env,
   NULL
 };
 

@@ -14,7 +14,7 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 
-void cshell_init();
+void osh_init();
 
 int pty_master_open(char *slave_name);
 

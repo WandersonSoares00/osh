@@ -13,7 +13,7 @@
 
 int main () {
     
-    cshell_init();
+    osh_init();
 
     char input[MAX_CHAR_INPUT];
 
@@ -34,7 +34,7 @@ int main () {
         exec_commands(&p_input);
         
         if (errno) {
-            perror("shell");
+            perror("osh");
         }
     }
 
